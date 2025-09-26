@@ -1,0 +1,7 @@
+nicegui==1.4.20
+fastapi==0.111.0
+uvicorn==0.30.0
+pandas==2.2.2
+numpy==1.26.4
+lightgbm==4.3.0
+joblib==1.4.2
