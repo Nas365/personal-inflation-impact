@@ -9,11 +9,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY app/requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 COPY artifacts/ ./artifacts/
 COPY data/ ./data/
 COPY app/ ./app/
 
-EXPOSE 8501
+EXPOSE 8080
 CMD ["python", "app/main.py"]
+
+
