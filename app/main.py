@@ -24,7 +24,7 @@ FEATS = CATS + [f'w_{c}' for c in CATS]
 BASE = Path(__file__).resolve().parent.parent
 ART = BASE / 'artifacts'
 DATA_W = BASE / 'data' / 'cpih_wide_yoy.csv'
-ASSETS = BASE / 'app' / 'assets'  # repo path: app/assets/bg.jpg
+ASSETS = BASE / 'app' / 'assets'  # not required anymore, but harmless if present
 
 # ---------------- LOAD ARTIFACTS ---------------- #
 _cls = joblib.load(ART / 'cls_model.joblib')
@@ -50,7 +50,7 @@ def make_features(latest, w_norm):
 # ---------------- FASTAPI BACKEND ---------------- #
 fastapi = FastAPI(title='Personal Inflation Impact API')
 
-# Serve static assets (background image)
+# (Optional) static mount left in place; safe to remove if you prefer
 fastapi.mount('/assets', StaticFiles(directory=str(ASSETS)), name='assets')
 
 @fastapi.get('/healthz')
@@ -79,14 +79,25 @@ def predict(payload: dict):
 ui.add_head_html("""
 <style>
   html, body, #q-app { height: 100%; }
+
+  /* Minimal, asset-free background */
   #q-app {
-    background: url('/assets/bg.jpg') no-repeat center center fixed;
-    background-size: cover;
+    background:
+      radial-gradient(1200px 600px at 15% 5%, rgba(255,255,255,0.06), transparent 60%),
+      linear-gradient(135deg, #0b1020 0%, #1b2235 50%, #101522 100%);
   }
-  .panel { background: rgba(0,0,0,0.55); padding: 18px 20px; border-radius: 12px; }
+
+  .panel {
+    background: rgba(0,0,0,0.55);
+    padding: 18px 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    backdrop-filter: blur(2px);
+  }
+
   .title { font-size: 1.65rem; font-weight: 700; }
   .intro { line-height: 1.5; }
-  .bullet { margin: 6px 0; line-height: 1.45; } /* adds spacing between lines */
+  .bullet { margin: 6px 0; line-height: 1.45; }
   .footer { opacity: 0.8; font-size: 0.95rem; }
 </style>
 """)
