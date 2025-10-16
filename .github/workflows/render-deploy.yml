@@ -11,11 +11,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # quick sanity: models exist
       - name: Smoke-check artifacts
         run: |
           test -f artifacts/cls_model.joblib || (echo "Missing classifier artifact" && exit 1)
           test -f artifacts/reg_model.joblib || (echo "Missing regressor artifact" && exit 1)
 
+      # Trigger Render deploy via Deploy Hook secret
       - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
         run: |
-          curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "ERROR: RENDER_DEPLOY_HOOK secret not set"; exit 1
+          fi
+          curl -fsSL -X POST "$RENDER_DEPLOY_HOOK"
+
