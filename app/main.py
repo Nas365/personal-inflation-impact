@@ -1,9 +1,11 @@
 # app/main.py
 from __future__ import annotations
 from pathlib import Path
-import os, pandas as pd, joblib
+import os
+import pandas as pd
+import joblib
+
 from fastapi import FastAPI
-from starlette.staticfiles import StaticFiles
 from nicegui import ui
 
 # ---------------- CONSTANTS ---------------- #
@@ -18,8 +20,8 @@ LABELS = {
 }
 FEATS = CATS + [f'w_{c}' for c in CATS]
 
-BASE = Path(__file__).resolve().parent.parent
-ART = BASE / 'artifacts'
+BASE   = Path(__file__).resolve().parent.parent
+ART    = BASE / 'artifacts'
 DATA_W = BASE / 'data' / 'cpih_wide_yoy.csv'
 ASSETS = BASE / 'app' / 'assets'
 
@@ -27,14 +29,14 @@ ASSETS = BASE / 'app' / 'assets'
 _cls = joblib.load(ART / 'cls_model.joblib')
 _reg = joblib.load(ART / 'reg_model.joblib')
 CLF, THR = _cls['model'], float(_cls['threshold'])
-REG = _reg['model']
+REG      = _reg['model']
 
 # ---------------- HELPERS ---------------- #
 def latest_row():
     df = pd.read_csv(DATA_W, parse_dates=['date']).sort_values('date')
     return df.iloc[-1]
 
-def normalize_weights(raw: dict) -> dict:
+def normalize_weights(raw: dict | None) -> dict:
     raw = raw or {}
     s = sum(max(0.0, float(raw.get(c, 0))) for c in CATS) or 1.0
     return {c: max(0.0, float(raw.get(c, 0))) / s for c in CATS}
@@ -47,9 +49,6 @@ def make_features(latest, w_norm):
 # ---------------- FASTAPI BACKEND ---------------- #
 fastapi = FastAPI(title='Personal Inflation Impact API')
 
-# serve static background/assets
-fastapi.mount('/assets', StaticFiles(directory=str(ASSETS)), name='assets')
-
 @fastapi.get('/healthz')
 def healthz():
     return {'status': 'ok'}
@@ -60,8 +59,8 @@ def predict(payload: dict):
     last = latest_row()
     X = make_features(last, w)
     proba = float(CLF.predict_proba(X)[:, 1][0])
-    flag = 'HIGH' if proba >= THR else 'LOW'
-    yhat = float(REG.predict(X)[0])
+    flag  = 'HIGH' if proba >= THR else 'LOW'
+    yhat  = float(REG.predict(X)[0])
     return {
         'latest_headline_cpih_pct': round(float(last.get('Headline', float('nan'))), 2),
         'latest_month': last['date'].strftime('%b %Y'),
@@ -73,6 +72,9 @@ def predict(payload: dict):
     }
 
 # ---------------- NICEGUI FRONTEND ---------------- #
+# Serve static assets (bg.jpg) at /assets/*
+ui.add_static_files('/assets', str(ASSETS))
+
 ui.add_head_html("""
 <style>
   html, body, #q-app { height: 100%; }
@@ -122,7 +124,7 @@ with ui.row().style('gap:28px; width:100%; max-width:1100px; margin: 0 auto; ali
 
         last = latest_row()
         latest_headline = float(last.get('Headline', float('nan')))
-        latest_month = last['date'].strftime('%b %Y')
+        latest_month    = last['date'].strftime('%b %Y')
 
         ui.separator()
         ui.label(
@@ -130,8 +132,8 @@ with ui.row().style('gap:28px; width:100%; max-width:1100px; margin: 0 auto; ali
         ).style('margin:4px 0 0 0; font-weight:600;')
 
         out_forecast = ui.label()
-        out_proba = ui.label()
-        out_flag = ui.label()
+        out_proba    = ui.label()
+        out_flag     = ui.label()
 
         def run():
             weights = {k: sliders[k].value for k in CATS}
@@ -140,24 +142,21 @@ with ui.row().style('gap:28px; width:100%; max-width:1100px; margin: 0 auto; ali
             flag = 'HIGH' if p >= THR else 'LOW'
             y = float(REG.predict(X)[0])
             out_forecast.text = f'Your 3-month forecast: {y:.2f}%   (vs headline {latest_headline:.2f}% now)'
-            out_proba.text = f'Risk probability: {p:.3f}   (threshold={THR:.3f})'
-            out_flag.text = f'Risk flag: {flag}'
+            out_proba.text    = f'Risk probability: {p:.3f}   (threshold={THR:.3f})'
+            out_flag.text     = f'Risk flag: {flag}'
 
         ui.button('CALCULATE', on_click=run, color='primary').style('margin-top:10px; width:160px;')
 
-    # RIGHT
+    # RIGHT (spaced with Markdown)
     with ui.column().classes('panel').style('flex:1; min-width:440px;'):
-        ui.label('About this tool').style('font-weight:700;')
-        ui.label(
-            '• Source: UK Office for National Statistics (ONS) CPIH divisions (monthly).\n'
-            '• What you do: move sliders to reflect your typical spending mix; values need not sum to 100 — we normalize.\n'
-            '• What you get: a 3-month personal inflation forecast and a risk probability/flag if your personal rate may exceed the headline CPIH by a policy margin (e.g., +2pp).'
-        )
-        ui.separator()
-        ui.label(
-            'Why it matters: being conscious of inflation pressures across your own basket helps you plan, adjust spending, '
-            'and avoid a disproportionate squeeze on your budget.'
-        )
+        ui.label('About this tool').style('font-weight:700; margin-bottom:6px;')
+        ui.markdown(
+            "**Source**: UK Office for National Statistics (ONS) CPIH divisions (monthly).\n\n"
+            "**What you do**: move the sliders to reflect your typical spending mix; values need not sum to 100 — we normalize.\n\n"
+            "**What you get**: a 3-month personal inflation forecast and a risk probability/flag if your personal rate may exceed the headline CPIH by a policy margin (e.g., +2pp).\n\n"
+            "**Why it matters**: being conscious of inflation pressures across your own basket helps you plan, adjust spending, "
+            "and avoid a disproportionate squeeze on your budget."
+        ).style('line-height:1.5;')
 
 # Footer
 with ui.row().style('width:100%; justify-content:center; margin: 10px 0 20px 0;'):
