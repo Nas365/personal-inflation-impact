@@ -325,7 +325,7 @@ ui.add_head_html('''
 with ui.element('div').classes('cold-banner') as _banner:
     ui.html(
         '<span>⏳ <strong>First load may take up to 60 seconds</strong> — '
-        'this app runs on Render\'s free tier and pulls live ONS data. '
+        'this app runs on Render\'s free tier. '
         'Thank you for your patience!</span>'
     )
     ui.button('✕', on_click=lambda: _banner.set_visibility(False)) \
@@ -510,7 +510,7 @@ ui.html('''
       <a href="https://www.ons.gov.uk/economy/inflationandpriceindices" target="_blank" rel="noopener">
         Office for National Statistics (ONS) CPIH
       </a>
-      &nbsp;&mdash;&nbsp; updated automatically each month.
+      &nbsp;&mdash;&nbsp; data current as of 17 September 2025.
     </div>
     <div style="margin-top:6px; font-size:0.78rem; opacity:0.65;">
       No personal data is collected or stored.

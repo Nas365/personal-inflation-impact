@@ -25,7 +25,7 @@ Source: Office for National Statistics (ONS) – CPIH Divisional Index (UK)
 
 Covers core CPIH categories: Food, Housing, Transport, Health, Recreation, Miscellaneous
 
-Updated monthly and used as the basis for all predictions
+Data current as of the ONS CPIH release dated 17 September 2025
 
 Processed into a tidy CSV (data/cpih_wide_yoy.csv) for training and inference
 
